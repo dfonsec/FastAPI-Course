@@ -19,9 +19,9 @@ class Post(BaseModel):
 
 
 try:
-    conn = psycopg.connect(host='localhost', database='fastapi', 
-                           username='postgres', password='postgres',
-                           cursor_factory=dict_row)
+    conn = psycopg.connect(host='localhost', dbname='fastapi', 
+                           user='postgres', password='postgres',
+                           row_factory=dict_row)
     cursor = conn.cursor()
     print("Database connection was successful")
 
