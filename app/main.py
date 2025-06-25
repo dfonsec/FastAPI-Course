@@ -3,15 +3,32 @@ from fastapi.params import Body
 from pydantic import BaseModel
 from typing import Optional
 from random import randrange
+import psycopg
+from psycopg.rows import dict_row
 
 app = FastAPI()
 
+# Pydantic Schema
+# We use the BaseModel class and pass it into the
+# Schema class so it can inherit the BaseModel's attributes
 class Post(BaseModel):
     title: str
     content: str
     published: bool = True
     rating: Optional[int] = None
 
+
+try:
+    conn = psycopg.connect(host='localhost', database='fastapi', 
+                           username='postgres', password='postgres',
+                           cursor_factory=dict_row)
+    cursor = conn.cursor()
+    print("Database connection was successful")
+
+except Exception as error:
+    print("Connecting to database failed")
+    print("Error was:", error)
+    
 
 my_posts = [{"title": "title of post 1", "content": "content of post 1", "id": 1},
             {"title": "favorite foods", "content": "I like pizza", "id": 2}]
