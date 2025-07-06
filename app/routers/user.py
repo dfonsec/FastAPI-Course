@@ -1,12 +1,13 @@
 from ..schemas import UserOut, UserCreate
 from ..models import User
 from ..database import get_db
-from ..main import app
 from sqlalchemy.orm import Session
-from fastapi import status, HTTPException, Depends
+from fastapi import status, HTTPException, Depends, APIRouter
 
 
-@app.post("/users", status_code=status.HTTP_201_CREATED, response_model=UserOut)
+router = APIRouter()
+
+@router.post("/users", status_code=status.HTTP_201_CREATED, response_model=UserOut)
 def create_user(user: UserCreate, db: Session = Depends(get_db)):
     # cursor.execute("""INSERT INTO posts (title, content, published) VALUES (%s, %s, %s) RETURNING *""", 
     #                (post.title, post.content, post.published))
@@ -26,7 +27,7 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
     
     return new_user
     
-@app.get("/users/{id}", response_model=UserOut)
+@router.get("/users/{id}", response_model=UserOut)
 def get_user(id: int, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == id).first()
     
