@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Response, status, HTTPException, Depends
 from fastapi.params import Body
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 from random import randrange
 import psycopg
 from psycopg.rows import dict_row
@@ -29,12 +29,6 @@ while True:
         print("Error was:", error)
         time.sleep(2)
     
-
-my_posts = [{"title": "title of post 1", "content": "content of post 1", "id": 1},
-            {"title": "favorite foods", "content": "I like pizza", "id": 2}]
-
-
-
 # This is a path operation
 # The / is just the root path operation
 @app.get("/")
@@ -47,16 +41,16 @@ def main():
 #     return {"data": posts}
 
 @app.get("/posts")
-def get_posts(db: Session = Depends(get_db)):
+def get_posts(db: Session = Depends(get_db), response_model=List[schemas.Post]):
     # cursor.execute("""SELECT * FROM posts""")
     # posts = cursor.fetchall()
     posts = db.query(models.Post).all()
-    return {"data": posts}
+    return posts
 
 
 # body will extract all the fields from the body and
 # then convert it into a python dictionary
-@app.post("/posts", status_code=status.HTTP_201_CREATED)
+@app.post("/posts", status_code=status.HTTP_201_CREATED, response_model=schemas.Post)
 def create_post(post: PostCreate, db: Session = Depends(get_db)):
     # cursor.execute("""INSERT INTO posts (title, content, published) VALUES (%s, %s, %s) RETURNING *""", 
     #                (post.title, post.content, post.published))
@@ -65,13 +59,15 @@ def create_post(post: PostCreate, db: Session = Depends(get_db)):
     new_post = models.Post(**post.model_dump())
     db.add(new_post)
     db.commit()
+    
+    # refresh takes the entry that was created in the db and updates the python object data to reflect what's in the db
     db.refresh(new_post)
     
-    return {"data": new_post}
+    return new_post
 
 # The ID field is a path parameter
 @app.get("/posts/{id}")
-def get_post(id: int, db: Session = Depends(get_db)):
+def get_post(id: int, db: Session = Depends(get_db), response_model=schemas.Post):
     
     # cursor.execute("""SELECT * FROM posts WHERE id= %s """, (str(id), ))
     # post = cursor.fetchone()
@@ -80,7 +76,7 @@ def get_post(id: int, db: Session = Depends(get_db)):
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail= f"post with id: {id} was not found.")
             
-    return {"post_detail": post}
+    return post
 
 
 @app.delete("/posts/{id}")
@@ -96,12 +92,12 @@ def delete_post(id: int, db: Session = Depends(get_db), status_code=status.HTTP_
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 @app.put("/posts/{id}")
-def update_post(id: int, post: PostBase,  db: Session = Depends(get_db)):
+def update_post(id: int, post: PostBase,  db: Session = Depends(get_db), response_model=schemas.Post):
     # cursor.execute(f"""UPDATE posts SET title = %s, content = %s, published = %s WHERE id = %s RETURNING *""", (post.title, post.content, post.published, str(id),))
     # updated_post = cursor.fetchone()
     # conn.commit()
     
-    # Define quert 
+    # Define query
     post_query = db.query(models.Post).filter(models.Post.id == id)
     
     # Grab post
@@ -115,5 +111,5 @@ def update_post(id: int, post: PostBase,  db: Session = Depends(get_db)):
     
     db.commit()
     
-    return {"data": post_query.first()}
+    return post_query.first()
     
