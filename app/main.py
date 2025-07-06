@@ -5,23 +5,15 @@ from typing import Optional
 from random import randrange
 import psycopg
 from psycopg.rows import dict_row
-from . import models
+from . import models, schemas
 from .database import engine, SessionLocal, get_db
 import time
 from sqlalchemy.orm import Session
+from .schemas import PostBase, PostCreate
 
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
-
-
-# Pydantic Schema
-# We use the BaseModel class and pass it into the
-# Schema class so it can inherit the BaseModel's attributes
-class Post(BaseModel):
-    title: str
-    content: str
-    published: bool = True
 
 while True: 
     try:
@@ -65,7 +57,7 @@ def get_posts(db: Session = Depends(get_db)):
 # body will extract all the fields from the body and
 # then convert it into a python dictionary
 @app.post("/posts", status_code=status.HTTP_201_CREATED)
-def create_post(post: Post, db: Session = Depends(get_db)):
+def create_post(post: PostCreate, db: Session = Depends(get_db)):
     # cursor.execute("""INSERT INTO posts (title, content, published) VALUES (%s, %s, %s) RETURNING *""", 
     #                (post.title, post.content, post.published))
     # new_post = cursor.fetchone()
@@ -104,7 +96,7 @@ def delete_post(id: int, db: Session = Depends(get_db), status_code=status.HTTP_
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 @app.put("/posts/{id}")
-def update_post(id: int, post: Post,  db: Session = Depends(get_db)):
+def update_post(id: int, post: PostBase,  db: Session = Depends(get_db)):
     # cursor.execute(f"""UPDATE posts SET title = %s, content = %s, published = %s WHERE id = %s RETURNING *""", (post.title, post.content, post.published, str(id),))
     # updated_post = cursor.fetchone()
     # conn.commit()
