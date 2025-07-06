@@ -3,7 +3,7 @@ from sqlalchemy import Column, Integer, String, Boolean, func
 from sqlalchemy.sql.expression import text
 from sqlalchemy.sql.sqltypes import TIMESTAMP
 
-class Post(Base):
+class PostTemplate(Base):
     __tablename__ = "posts"
     
     id  = Column(Integer, primary_key=True, nullable=False)
